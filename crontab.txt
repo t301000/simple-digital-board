@@ -1,0 +1,1 @@
+40 16 * * * /home/pi/kill-chrome.sh

@@ -1,0 +1,45 @@
+1. 只要設定變數 url
+2. 滑鼠點一下即可重新載入
+
+
+********** url 參數設定 **********
+
+google 簡報參數：
+loop=true      循環播放
+delayms=20000  每頁停留時間(毫秒)
+rm=minimal     隱藏控制列
+start=true     自動播放
+
+範例：
+https://docs.google.com/presentation/d/e/2PACX-1vT0upFE11b8SlwpGLJx4fHjTkYTlMQW2fFGAsph1gOjUjM9U2QeuXcxZIIElVH1jduKywQQZlOz_Hue/embed?loop=true&delayms=20000&rm=minimal&start=true
+
+------------------------------------------------
+
+youtube 參數：
+https://developers.google.com/youtube/iframe_api_reference
+https://developers.google.com/youtube/player_parameters
+https://www.h3xed.com/web-and-internet/link-directly-to-and-embed-hd-youtube-videos
+https://stackoverflow.com/questions/7582336/force-youtube-embed-to-start-in-720p?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+https://www.techmarks.com/muteyoutubevideoplayer/
+http://ashblagdon.com/how-to-get-your-embedded-youtube-videos-to-autoplay-on-your-website/
+autoplay=1        自動開始播放
+loop=1            循環播放
+controls=0        隱藏控制列
+showinfo=1        顯示資訊(html5 player 似乎沒作用)
+mute=0            是否靜音
+cc_load_policy=1  是否強制開啟字幕
+VQ=HD720 HD1080   強制以 720P 1080P 播放
+list=             播放清單 ID
+rel=0             是否在片尾顯示推薦影片
+
+範例：
+https://www.youtube.com/embed/videoseries?autoplay=1&loop=1&controls=0&showinfo=1&mute=0&cc_load_policy=1&VQ=HD720&list=播放清單ID
+
+
+https://www.youtube.com/embed/videoseries?autoplay=1&loop=1&controls=0&showinfo=1&mute=0&cc_load_policy=1&VQ=HD720&list=PLZ9f87PcBj_jCQWBrvhLvZCQHtRJoUGrn
+
+
+單一影片
+https://www.youtube.com/embed/nEVnAeuRWQo?autoplay=1&loop=1&controls=0&showinfo=1&mute=0&cc_load_policy=1&VQ=HD720
+
+https://www.youtube-nocookie.com/embed/nEVnAeuRWQo?rel=0&amp;controls=0&autoplay=1&loop=1&showinfo=1&VQ=HD1080

@@ -1,0 +1,169 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+*,
+*:before,
+*:after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	width: 100%;
+	height: 100%;
+}
+
+iframe {
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
+
+.container {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	position: relative;
+}
+
+/* flex 容器，絕對置中 */
+.center-center {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.reload {
+	width: 200px;
+	height: 200px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	border-radius: 20px;
+	transform: translateX(-100px) translateY(-100px);
+	transition: all .2s linear;
+	font: bold 400% Helvetica, Arial;
+}
+
+.reload:hover {
+	background-color: rgba(0, 0, 0, .3);
+	transition: all .2s linear;
+	cursor: pointer;
+}
+
+/* https://codepen.io/vkjgr/pen/nEvFA */
+.reload:hover .reloadDouble {
+	border-color: transparent white;
+	border-radius: 50%;
+	border-style: solid;
+	border-width: .125em;
+	height: 1.5em;
+	margin: .25em;
+	width: 1.5em;
+	animation: rotate 1.5s linear infinite;
+}
+
+.reload:hover .reloadDouble:before,
+.reload:hover .reloadDouble:after {
+	border-style: solid;
+	content: '';
+	display: block;
+	position: absolute;
+	width: 0;
+	transform: rotate(-45deg);
+}
+
+.reload:hover .reloadDouble:after {
+	border-color: transparent transparent transparent white;
+	border-width: .3125em 0 .3125em .5em;
+	top: -.3125em;
+	left: .0625em;
+}
+
+.reload:hover .reloadDouble:before {
+	border-color: transparent white transparent transparent;
+	border-width: .3125em .5em .3125em 0;
+	bottom: -.3125em;
+	right: .0625em;
+}
+
+@keyframes rotate {
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.menu {
+	position: absolute;
+	width: 250px;
+	min-height: 50px;
+	border-radius: 20px 20px 0 0;
+	bottom: 0;
+	left: 20px;
+	/*outline: 2px solid red;*/
+}
+
+.content {
+	position: absolute;
+	width: 100%;
+	min-height: 300px;
+	border-radius: 20px 20px 0 0;
+	bottom: 0;
+	left: 0;
+	padding: 20px;
+	transform: translateY(100%);
+	background-color: rgba(255, 255, 255, .5);
+	transition: all .2s linear;
+}
+
+.menu:hover .content {
+	transform: translateY(0);
+	/*transition: all .2s linear;*/
+}
+
+.resource {
+	margin-bottom: 10px;
+}
+
+.radio {
+	width: 40px;
+	margin-right: 10px;
+	align-self: stretch;
+	text-align: center;
+}
+
+.radio:hover {
+	background-color: #afa;
+}
+
+.resource-button {
+	/*width: 80%;*/
+	height: 50px;
+	line-height: 50px;
+	text-align: center;
+	letter-spacing: 2px;
+	background-color: #faa;
+	/*margin-bottom: 10px;*/
+	cursor: pointer;
+	/*display: inline-block;*/
+	flex: 1 1 auto;
+}
+
+.resource-button:hover {
+	/*background-color: #afa;*/
+	outline: 5px solid #afa;
+	transition: all .1s linear;
+}
+/* 必須在 hover 之後 */
+.resource-button:active {
+	background-color: #aaf;
+}
+
+.active {
+	background-color: #aaf;
+}
+
+
+
