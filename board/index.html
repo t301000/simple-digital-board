@@ -16,17 +16,18 @@
 		</div>
 		<div class="menu">
 			<div class="content">
-				<div class="center-center resource">
-					<div class="radio center-center"><input type="radio" value="slide"></div>
-					<div class="resource-button" id="slideBtn">簡報</div>
-				</div>
-				<div class="center-center resource">
-					<div class="radio center-center"><input type="radio" value="youtube"></div>
-					<div class="resource-button" id="youtubeBtn">影片</div>
-				</div>
+        <!-- 選單項目放在這 -->
 			</div>
 		</div>
 	</div>
+
+  <!-- 選單項目樣板 -->
+  <template id="resource-item">
+    <div class="center-center resource">
+      <div class="radio center-center"></div>
+      <div class="resource-button"></div>
+    </div>
+  </template>
 	
 	<!-- Firebase App is always required and must be first -->
 	<script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js"></script>
@@ -38,6 +39,7 @@
 	<!-- <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-messaging.js"></script> -->
 	<!-- <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-functions.js"></script> -->
 
+	<script src="./config.js"></script>
 	<script src="./app.js"></script>
 </body>
 

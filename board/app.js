@@ -1,88 +1,173 @@
-(function() {
-	/* 播放項目設定 */
-	// 簡報
-	const slideUrl = 'https://docs.google.com/presentation/d/e/2PACX-1vT0upFE11b8SlwpGLJx4fHjTkYTlMQW2fFGAsph1gOjUjM9U2QeuXcxZIIElVH1jduKywQQZlOz_Hue/embed?loop=true&delayms=2000&rm=minimal&start=true';
-	// youtube
-	const youtubeUrl = 'https://www.youtube.com/embed/lgOafIYtYtU?&autoplay=1&showinfo=0&vq=highres&rel=0&loop=1&controls=0&playlist=lgOafIYtYtU';
-	// 預設播放項目，值為 slide 或 youtube
-	let defaultPlayType = 'slide';
+firebase.initializeApp(config);
+const db = firebase.firestore();
+
+;(function(db) {
+
+  let urls = [];
+  let playing = getDefaultResource();
+
+  const template = document.querySelector('#resource-item');
+  const menuContent = document.querySelector('.content');
+  menuContent.addEventListener('click', menuContentClickHandler);
+
+  const iframe = document.querySelector('iframe');
+
+  // 觸發重新載入
+  const reload = document.querySelector('.reload');
+  reload.addEventListener('click', () => play());
+
+  db.collection('channels').where('name', '==', department).limit(1).get()
+    .then(docs => docs.forEach(doc => {
+      getUrls(doc.id);
+      listenForReload(doc.id);
+    }));
 
 
-	/* 以下勿動 */
-	// 若 localStorage 有設定預設播放項目，則以 localStorage 為準
-	defaultPlayType = localStorage.getItem('defaultPlayType') || defaultPlayType;
-	// 正在播放
-	let currentPlayType = defaultPlayType;
+  /********* 函數區 *********/
 
-	const contentList = {
-		slide: slideUrl,
-		youtube: youtubeUrl
-	};
+  // 取得 / 更新播放資源 url
+  // 接著產生 / 更新資源選單
+  // 執行播放
+  function getUrls(id) {
+    db.collection(`channels/${id}/resources`)
+      .onSnapshot(snapshot => {
+        snapshot.docChanges().forEach(
+          ({type, doc}) => {
+            const obj = {id: doc.id, ...doc.data()};
+            switch (type) {
+              case 'added': // 初次載入或新增
+                urls = [...urls, obj];
+                break;
+              case 'modified': // 修改
+                if (playing && playing.id === doc.id) {
+                  // 修改到目前播放資源
+                  playing = obj;
+                  play();
+                }
+                const idx = urls.findIndex(item => item.id === doc.id);
+                urls = [...urls.slice(0, idx), obj, ...urls.slice(idx + 1)];
+                break;
+              case 'removed': // 刪除
+                // console.log(`id: ${doc.id} removed`);
+                urls = urls.filter(item => item.id !== doc.id);
+                break;
+            }
+          }
+        );
 
-	const iframe = document.querySelector('iframe');
+        if (!playing) {
+          play();
+        }
+        generateMenu();
+      });
+  }
 
-	// 觸發重新載入
-	const reloadTrigger = document.querySelector('.reload');
-	reloadTrigger.addEventListener('click', () => reload());
+  // 產生 / 更新資源選單
+  function generateMenu() {
+    // console.log(urls);
+    menuContent.innerHTML = '';
+    urls.forEach(obj => {
+      const wrapper = template.content.querySelector('.resource');
+      const btn = template.content.querySelector('.resource-button');
+      btn.textContent = obj.name;
+      wrapper.setAttribute('data-id', obj.id);
+      wrapper.setAttribute('data-url', obj.url);
 
-	// 觸發載入簡報
-	const slideBtn = document.querySelector('#slideBtn');
-	// if (defaultPlayType === 'slide') slideBtn.classList.add('active');
-	slideBtn.addEventListener('click', () => {
-		reload('slide');
-		setActiveClass('slide');
-	});
+      // 附加一個選項至 DOM
+      const clone = document.importNode(template.content, true);
+      menuContent.appendChild(clone);
+  
+      // 更新 ui 標記
+      updateDefaultMark();
+      updatePlayingMark();
+    });
+  }
 
-	// 觸發載入 youtube
-	const youtubeBtn = document.querySelector('#youtubeBtn');
-	// if (defaultPlayType === 'youtube') youtubeBtn.classList.add('active');
-	youtubeBtn.addEventListener('click', () => {
-		reload('youtube');
-		setActiveClass('youtube');
-	});
+  // 執行播放
+  function play() {
+    if (playing !== null) {
+      iframe.setAttribute('src', playing.url);
+    }
+  }
 
-	// 播放項目按鈕
-	const resourceBtns = {
-		slide: slideBtn,
-		youtube: youtubeBtn
-	};
+  // 選單 click handler
+  function menuContentClickHandler(event) {
+    const srcElm = event.target;
+    const wrapper = srcElm.parentNode;
 
-	// 用來設定預設播放項目的 radio button
-	const resourceRadios = Array.from(document.querySelectorAll('[type=radio]'));
-	resourceRadios.forEach((radio) => {
-		radio.checked = radio.value === defaultPlayType;
-		radio.addEventListener('click', setDefaultTypeHandler);
-	});
+    // 按下按鈕
+    if (srcElm.className.indexOf('resource-button') !== -1) {
+      // 更新正在播放之資源
+      playing = {id: wrapper.dataset['id'], url: wrapper.dataset['url']};
+      play();
+      updatePlayingMark();
+    }
 
-	reload();
-	setActiveClass(defaultPlayType);
+    // 按下 radio
+    if (srcElm.className.indexOf('radio') !== -1) {
+      // 設為預設值
+      localStorage.setItem('default', JSON.stringify({id: wrapper.dataset['id'], url: wrapper.dataset['url']}));
+      updateDefaultMark(wrapper.dataset['id']);
+    }
+  }
 
+  // 更新是否為預設播放項目之標記
+  function updateDefaultMark(id) {
+    // 未傳入 id，則檢查是否有預設
+    if (!id) {
+      const defaultResource = getDefaultResource();
+      if (!defaultResource) {
+        return false;
+      }
+      id = defaultResource.id;
+    }
 
-	/* 函數區 */
+    const radios = document.querySelectorAll('.radio');
 
-	// 設定 iframe src
-	function reload(loadType = currentPlayType) {
-		const playType = loadType;
-		currentPlayType = playType;
-		iframe.setAttribute('src', contentList[playType]);
-		// localStorage.setItem('playType', playType);
-	}
+    radios.forEach(radio => {
+      const wrapper = radio.parentNode;
+      if (wrapper.dataset['id'] === id) {
+        if (!radio.classList.contains('default')) {
+          radio.classList.add('default');
+        }
+      } else {
+        radio.classList.remove('default');
+      }
+    });
+  }
 
-	// 設定預設播放資源類型，並更新 radio checked 狀態
-	function setDefaultTypeHandler() {
-		resourceRadios.forEach(radio => radio.checked = radio === this);
-		localStorage.setItem('defaultPlayType', this.value);
-	}
+  // 更新是否為目前播放項目之標記
+  function updatePlayingMark() {
+    if (!playing) return false;
 
-	// 設定每個播放項目按鈕是否添加 active class
-	function setActiveClass(value) {
-		const keys = Object.keys(resourceBtns);
-		keys.forEach(key => {
-			if (key === value) {
-				resourceBtns[key].classList.add('active');
-			} else {
-				resourceBtns[key].classList.remove('active');
-			}
-		});
-	}
-})();
+    const btns = document.querySelectorAll('.resource-button');
+  
+    btns.forEach(btn => {
+      const wrapper = btn.parentNode;
+      if (wrapper.dataset['id'] === playing.id) {
+        if (!btn.classList.contains('playing')) {
+          btn.classList.add('playing');
+        }
+      } else {
+        btn.classList.remove('playing');
+      }
+    });
+  }
+  
+  // 取得預設播放資源
+  function getDefaultResource() {
+    return JSON.parse(localStorage.getItem('default'));
+  }
+
+  // 監聽 firestore document 變化
+  // 由遠端控制
+  // 第一次接收到 執行第一次播放
+  // 第二次以後接收到 執行重新載入播放
+  function listenForReload(id) {
+    if (!id) return false;
+
+    db.doc(`channels/${id}`)
+      .onSnapshot(doc => play());
+  }
+
+})(db);

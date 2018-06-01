@@ -1,0 +1,2 @@
+const department = '';
+const config = {};
