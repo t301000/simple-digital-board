@@ -98,7 +98,7 @@ iframe {
 
 .menu {
 	position: absolute;
-	width: 250px;
+	min-width: 250px;
 	min-height: 50px;
 	border-radius: 20px 20px 0 0;
 	bottom: 0;
@@ -115,7 +115,7 @@ iframe {
 	left: 0;
 	padding: 20px;
 	transform: translateY(100%);
-	background-color: rgba(255, 255, 255, .5);
+	background-color: rgba(169, 169, 169, .8);
 	transition: all .2s linear;
 }
 
@@ -129,25 +129,31 @@ iframe {
 }
 
 .radio {
-	width: 40px;
-	height: 40px;
+	width: 32px;
+	height: 32px;
 	margin-right: 10px;
 	align-self: center;
 	text-align: center;
 	border-radius: 50%;
+    cursor: pointer;
 }
 
 .radio:hover {
-	background-color: transparent;
-	border: 6px solid #598859;
+	background-color: white;
+	border: 6px solid #afa;
 }
 /* 必須在 hover 之後 */
 .radio:active {
-	background-color: #598859;
+	background-color: #d3424f;
 }
 
 .radio.default {
 	background-color: #c6424f;
+}
+
+.default:before {
+	content: '預';
+	color: white;
 }
 
 .resource-button {
@@ -175,7 +181,17 @@ iframe {
 
 .playing {
 	background-color: #aaf;
+    position: relative;
 }
 
-
-
+.playing:before {
+	content: '';
+    background-image: url("./images/playing.png");
+    background-size: contain;
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+}

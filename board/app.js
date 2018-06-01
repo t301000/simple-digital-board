@@ -17,9 +17,10 @@ const db = firebase.firestore();
   reload.addEventListener('click', () => play());
 
   db.collection('channels').where('name', '==', department).limit(1).get()
-    .then(docs => docs.forEach(doc => getUrls(doc.id)));
-
-  play();
+    .then(docs => docs.forEach(doc => {
+      getUrls(doc.id);
+      listenForReload(doc.id);
+    }));
 
 
   /********* 函數區 *********/
@@ -66,14 +67,6 @@ const db = firebase.firestore();
     // console.log(urls);
     menuContent.innerHTML = '';
     urls.forEach(obj => {
-      // const btn = template.content.querySelector('.resource-button');
-      // btn.textContent = obj.name;
-      // btn.setAttribute('data-id', obj.id);
-      // btn.setAttribute('data-url', obj.url);
-      //
-      // const radio = template.content.querySelector('.radio');
-      // radio.setAttribute('data-id', obj.id);
-      // radio.setAttribute('data-url', obj.url);
       const wrapper = template.content.querySelector('.resource');
       const btn = template.content.querySelector('.resource-button');
       btn.textContent = obj.name;
@@ -164,6 +157,17 @@ const db = firebase.firestore();
   // 取得預設播放資源
   function getDefaultResource() {
     return JSON.parse(localStorage.getItem('default'));
+  }
+
+  // 監聽 firestore document 變化
+  // 由遠端控制
+  // 第一次接收到 執行第一次播放
+  // 第二次以後接收到 執行重新載入播放
+  function listenForReload(id) {
+    if (!id) return false;
+
+    db.doc(`channels/${id}`)
+      .onSnapshot(doc => play());
   }
 
 })(db);
