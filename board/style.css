@@ -139,11 +139,15 @@ iframe {
 
 .radio:hover {
 	background-color: transparent;
-	border: 4px solid #598859;
+	border: 6px solid #598859;
 }
-
+/* 必須在 hover 之後 */
 .radio:active {
 	background-color: #598859;
+}
+
+.radio.default {
+	background-color: #c6424f;
 }
 
 .resource-button {
@@ -169,7 +173,7 @@ iframe {
 	background-color: #aaf;
 }
 
-.active {
+.playing {
 	background-color: #aaf;
 }
 

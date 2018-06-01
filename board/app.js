@@ -1,7 +1,10 @@
+firebase.initializeApp(config);
+const db = firebase.firestore();
+
 ;(function(db) {
 
   let urls = [];
-  let playing = JSON.parse(localStorage.getItem('default'));
+  let playing = getDefaultResource();
 
   const template = document.querySelector('#resource-item');
   const menuContent = document.querySelector('.content');
@@ -19,7 +22,7 @@
   play();
 
 
-  /* 函數區 */
+  /********* 函數區 *********/
 
   // 取得 / 更新播放資源 url
   // 接著產生 / 更新資源選單
@@ -74,6 +77,10 @@
       // 附加一個選項至 DOM
       const clone = document.importNode(template.content, true);
       menuContent.appendChild(clone);
+  
+      // 更新 ui 標記
+      updateDefaultMark();
+      updatePlayingMark();
     });
   }
 
@@ -105,13 +112,38 @@
   }
 
   // 更新是否為預設播放項目之標記
-  function updateDefaultMark(id) {
+  function updateDefaultMark(id = getDefaultResource().id) {
+    const radios = document.querySelectorAll('.radio');
 
+    radios.forEach(radio => {
+      if (radio.dataset['id'] === id) {
+        if (!radio.classList.contains('default')) {
+          radio.classList.add('default');
+        }
+      } else {
+        radio.classList.remove('default');
+      }
+    });
   }
 
   // 更新是否為目前播放項目之標記
   function updatePlayingMark() {
-
+    const btns = document.querySelectorAll('.resource-button');
+  
+    btns.forEach(btn => {
+      if (btn.dataset['id'] === playing.id) {
+        if (!btn.classList.contains('playing')) {
+          btn.classList.add('playing');
+        }
+      } else {
+        btn.classList.remove('playing');
+      }
+    });
+  }
+  
+  // 取得預設播放資源
+  function getDefaultResource() {
+    return JSON.parse(localStorage.getItem('default'));
   }
 
 })(db);
