@@ -43,6 +43,7 @@ const db = firebase.firestore();
                   setDefaultResource(obj);
                 }
                 break;
+
               case 'modified': // 修改
                 if (playing && playing.id === doc.id) {
                   // 修改到目前播放資源
@@ -57,9 +58,16 @@ const db = firebase.firestore();
                 const idx = urls.findIndex(item => item.id === doc.id);
                 urls = [...urls.slice(0, idx), obj, ...urls.slice(idx + 1)];
                 break;
+
               case 'removed': // 刪除
                 // console.log(`id: ${doc.id} removed`);
                 urls = urls.filter(item => item.id !== doc.id);
+
+                if (playing && playing.id === doc.id) {
+                  // 刪除到目前播放資源
+                  playing = null;
+                  iframe.setAttribute('src', '');
+                }
 
                 // 刪除到預設，則移除
                 if (defaultItem && defaultItem.id === doc.id) {
@@ -76,6 +84,9 @@ const db = firebase.firestore();
         }
         // 產生選單
         generateMenu();
+        // 更新 ui 標記
+        updateDefaultMark();
+        updatePlayingMark();
       });
   }
 
@@ -95,8 +106,8 @@ const db = firebase.firestore();
       menuContent.appendChild(clone);
   
       // 更新 ui 標記
-      updateDefaultMark();
-      updatePlayingMark();
+      // updateDefaultMark();
+      // updatePlayingMark();
     });
   }
 
@@ -135,16 +146,16 @@ const db = firebase.firestore();
 
   // 更新是否為預設播放項目之標記
   function updateDefaultMark(id) {
+    const radios = document.querySelectorAll('.radio');
     // 未傳入 id，則檢查是否有預設
     if (!id) {
       const defaultResource = getDefaultResource();
       if (!defaultResource) {
+        radios.forEach(radio => radio.classList.remove('default'));
         return false;
       }
       id = defaultResource.id;
     }
-
-    const radios = document.querySelectorAll('.radio');
 
     radios.forEach(radio => {
       const wrapper = radio.parentNode;
@@ -160,10 +171,13 @@ const db = firebase.firestore();
 
   // 更新是否為目前播放項目之標記
   function updatePlayingMark() {
-    if (!playing) return false;
-
     const btns = document.querySelectorAll('.resource-button');
-  
+
+    if (!playing) {
+      btns.forEach(btn => btn.classList.remove('playing'));
+      return false;
+    }
+
     btns.forEach(btn => {
       const wrapper = btn.parentNode;
       if (wrapper.dataset['id'] === playing.id) {
