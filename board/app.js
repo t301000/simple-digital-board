@@ -66,14 +66,19 @@ const db = firebase.firestore();
     // console.log(urls);
     menuContent.innerHTML = '';
     urls.forEach(obj => {
+      // const btn = template.content.querySelector('.resource-button');
+      // btn.textContent = obj.name;
+      // btn.setAttribute('data-id', obj.id);
+      // btn.setAttribute('data-url', obj.url);
+      //
+      // const radio = template.content.querySelector('.radio');
+      // radio.setAttribute('data-id', obj.id);
+      // radio.setAttribute('data-url', obj.url);
+      const wrapper = template.content.querySelector('.resource');
       const btn = template.content.querySelector('.resource-button');
       btn.textContent = obj.name;
-      btn.setAttribute('data-id', obj.id);
-      btn.setAttribute('data-url', obj.url);
-
-      const radio = template.content.querySelector('.radio');
-      radio.setAttribute('data-id', obj.id);
-      radio.setAttribute('data-url', obj.url);
+      wrapper.setAttribute('data-id', obj.id);
+      wrapper.setAttribute('data-url', obj.url);
 
       // 附加一個選項至 DOM
       const clone = document.importNode(template.content, true);
@@ -94,12 +99,13 @@ const db = firebase.firestore();
 
   // 選單 click handler
   function menuContentClickHandler(event) {
-    const srcElm = event.srcElement;
+    const srcElm = event.target;
+    const wrapper = srcElm.parentNode;
 
     // 按下按鈕
     if (srcElm.className.indexOf('resource-button') !== -1) {
       // 更新正在播放之資源
-      playing = {id: srcElm.dataset['id'], url: srcElm.dataset['url']};
+      playing = {id: wrapper.dataset['id'], url: wrapper.dataset['url']};
       play();
       updatePlayingMark();
     }
@@ -107,17 +113,27 @@ const db = firebase.firestore();
     // 按下 radio
     if (srcElm.className.indexOf('radio') !== -1) {
       // 設為預設值
-      localStorage.setItem('default', JSON.stringify({id: srcElm.dataset['id'], url: srcElm.dataset['url']}));
-      updateDefaultMark(srcElm.dataset['id']);
+      localStorage.setItem('default', JSON.stringify({id: wrapper.dataset['id'], url: wrapper.dataset['url']}));
+      updateDefaultMark(wrapper.dataset['id']);
     }
   }
 
   // 更新是否為預設播放項目之標記
-  function updateDefaultMark(id = getDefaultResource().id) {
+  function updateDefaultMark(id) {
+    // 未傳入 id，則檢查是否有預設
+    if (!id) {
+      const defaultResource = getDefaultResource();
+      if (!defaultResource) {
+        return false;
+      }
+      id = defaultResource.id;
+    }
+
     const radios = document.querySelectorAll('.radio');
 
     radios.forEach(radio => {
-      if (radio.dataset['id'] === id) {
+      const wrapper = radio.parentNode;
+      if (wrapper.dataset['id'] === id) {
         if (!radio.classList.contains('default')) {
           radio.classList.add('default');
         }
@@ -129,10 +145,13 @@ const db = firebase.firestore();
 
   // 更新是否為目前播放項目之標記
   function updatePlayingMark() {
+    if (!playing) return false;
+
     const btns = document.querySelectorAll('.resource-button');
   
     btns.forEach(btn => {
-      if (btn.dataset['id'] === playing.id) {
+      const wrapper = btn.parentNode;
+      if (wrapper.dataset['id'] === playing.id) {
         if (!btn.classList.contains('playing')) {
           btn.classList.add('playing');
         }
