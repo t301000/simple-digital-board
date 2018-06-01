@@ -39,6 +39,7 @@ const db = firebase.firestore();
                 break;
               case 'modified': // 修改
                 if (playing && playing.id === doc.id) {
+                  // 修改到目前播放資源
                   playing = obj;
                   play();
                 }
