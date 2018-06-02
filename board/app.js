@@ -157,7 +157,6 @@ const db = firebase.firestore();
       radios.forEach(radio => radio.classList.remove('default'));
       return false;
     }
-    const id = defaultResource.id;
 
     radios.forEach(radio => {
       const wrapper = radio.parentNode;
