@@ -18,16 +18,16 @@ const db = firebase.firestore();
   reload.addEventListener('click', () => play());
 
   db.collection('channels').where('name', '==', department).limit(1).get()
-    .then(docs => docs.forEach(doc => {
-      getUrls(doc.id); // 取得資源清單並產生選單
-      iframe.setAttribute('data-id', doc.id);
+    .then(docs => docs.forEach(({id}) => {
+      getUrls(id); // 取得資源清單並產生選單
+      iframe.setAttribute('data-id', id);
 
       // TODO: maybe setTimeout....
-      listenForReload(doc.id); // 監聽來自遠端的重載指示
+      listenForReload(id); // 監聽來自遠端的重載指示
       // listenForSetDefault(doc.id); // 監聽來自遠端的設定預設資源指示
       // listenForSetPlaying(doc.id); // 監聽來自遠端的設定目前播放資源指示
-      setTimeout(() => listenForSetDefault(doc.id), 1000);
-      setTimeout(() => listenForSetPlaying(doc.id), 3000);
+      setTimeout(() => listenForSetDefault(id), 1000); // 監聽來自遠端的設定預設資源指示
+      setTimeout(() => listenForSetPlaying(id), 3000); // 監聽來自遠端的設定目前播放資源指示
     }));
 
 
@@ -39,7 +39,6 @@ const db = firebase.firestore();
   function getUrls(id) {
     db.collection(`channels/${id}/resources`)
       .onSnapshot(snapshot => {
-        // const defaultItem = getDefaultResource();
         snapshot.docChanges().forEach(
           ({type, doc}) => {
             const obj = {id: doc.id, ...doc.data()};
@@ -64,7 +63,6 @@ const db = firebase.firestore();
                 break;
 
               case 'removed': // 刪除
-                // console.log(`id: ${doc.id} removed`);
                 urls = urls.filter(item => item.id !== doc.id);
 
                 if (playing && playing.id === doc.id) {
@@ -89,7 +87,6 @@ const db = firebase.firestore();
 
   // 產生 / 更新資源選單
   function generateMenu() {
-    // console.log(urls);
     menuContent.innerHTML = '';
     urls.forEach((obj, idx)=> {
       const wrapper = template.content.querySelector('.resource');
@@ -183,11 +180,6 @@ const db = firebase.firestore();
   function setDefaultResource(obj) {
     defaultResource = obj ? obj : null;
     updateDefaultMark();
-  }
-
-  // 設定目前播放資源
-  function setPlayingResource(obj) {
-    playing = obj;
   }
 
   // 設定目前播放資源
