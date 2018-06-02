@@ -207,10 +207,9 @@ const db = firebase.firestore();
   function listenForReload(id) {
     if (!id) return false;
 
-    db.doc(`channels/${id}`)
+    db.doc(`channels/${id}/actions/reload`)
       .onSnapshot(doc => {
         play();
-        // console.log(doc.get('reloadAt'));
       });
   }
 
