@@ -157,6 +157,7 @@ const db = firebase.firestore();
       radios.forEach(radio => radio.classList.remove('default'));
       return false;
     }
+    const id = defaultResource.id;
 
     radios.forEach(radio => {
       const wrapper = radio.parentNode;
@@ -183,6 +184,11 @@ const db = firebase.firestore();
   function setDefaultResource(obj) {
     defaultResource = obj ? obj : null;
     updateDefaultMark();
+  }
+
+  // 設定目前播放資源
+  function setPlayingResource(obj) {
+    playing = obj;
   }
 
   // 設定目前播放資源
