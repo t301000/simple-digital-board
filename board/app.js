@@ -20,7 +20,7 @@ const db = firebase.firestore();
   db.collection('channels').where('name', '==', department).limit(1).get()
     .then(docs => docs.forEach(({id}) => {
       getUrls(id); // 取得資源清單並產生選單
-      iframe.setAttribute('data-id', id);
+      iframe.setAttribute('data-id', id); // 用於後續更新 default and playing 至 firestore 用
 
       // TODO: maybe setTimeout....
       listenForReload(id); // 監聽來自遠端的重載指示

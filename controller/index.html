@@ -8,14 +8,28 @@
 </head>
 
 <body>
-  <div class="container center-center">
-    <div class="content center-center">
-      <div class="reload center-center">
-        <img src="./images/reload.png" class="reload-img">
+  <div class="container flex flex-column">
+    <div class="reload center-center">
+      <img src="./images/reload.png" class="reload-img">
+    </div>
+    <div class="content">
+      <div class="resources">
+        <!-- 放置資源選項 -->
       </div>
-      <div class="msg" hidden></div>
     </div>
   </div>
+
+  <div class="msg" hidden></div>
+
+  <template>
+    <div class="resource">
+      <h4 class="title"></h4>
+      <div class="btns">
+        <div class="btn btn-set-default">預設</div>
+        <div class="btn btn-set-playing">播放</div>
+      </div>
+    </div>
+  </template>
   
   <!-- Firebase App is always required and must be first -->
   <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js"></script>
