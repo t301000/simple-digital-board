@@ -87,6 +87,8 @@ const db = firebase.firestore();
           snapshot.docChanges().forEach(generateUrlsArray);
           // 產生資源項目
           generateItems();
+          markDefault();
+          markPlaying();
 
           // urlsInited = true;
         }
@@ -122,11 +124,13 @@ const db = firebase.firestore();
           if (playing && playing.id === doc.id) {
             // 刪除到目前播放資源
             playing = null;
+            db.doc(`channels/${id}/actions/setPlaying`).set({id: ''});
           }
 
           // 刪除到預設，則移除
           if (defaultResource && defaultResource.id === doc.id) {
             defaultResource = null;
+            db.doc(`channels/${id}/actions/setDefault`).set({id: ''});
           }
           break;
       }
@@ -185,7 +189,7 @@ const db = firebase.firestore();
     db.doc(`channels/${id}/actions/setDefault`)
       .onSnapshot(doc => {
         defaultResource = urls.find(item => item.id === doc.get('id'));
-        // console.log('default: ', defaultResource);
+        console.log('default: ', defaultResource);
         markDefault();
       });
   }
