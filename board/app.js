@@ -134,6 +134,11 @@ const db = firebase.firestore();
       // 更新正在播放之資源，並播放
       setPlayingResource(urls[wrapper.dataset['idx']]);
       play();
+      // 更新至 firestore
+      db.doc(`channels/${iframe.dataset['id']}/actions/setPlaying`)
+        .set({id: wrapper.dataset['id']})
+        .then(() => console.log(`set playing id: ${wrapper.dataset['id']} success`))
+        .catch(err => console.log(err));
     }
 
     // 按下 radio，變更預設
@@ -141,7 +146,7 @@ const db = firebase.firestore();
       // 設為預設值，更新至 firestore
       db.doc(`channels/${iframe.dataset['id']}/actions/setDefault`)
         .set({id: wrapper.dataset['id']})
-        .then(() => console.log(`set default id: ${wrapper.dataset['id']}`))
+        .then(() => console.log(`set default id: ${wrapper.dataset['id']} success`))
         .catch(err => console.log(err));
     }
   }
