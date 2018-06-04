@@ -10,6 +10,9 @@ const db = firebase.firestore();
   const template = document.querySelector('template');
   const resources = document.querySelector('.resources');
   resources.addEventListener('click', resourcesClickHandler);
+  
+  const pageTitle = document.querySelector('title'); // <title></title> element
+  pageTitle.innerText = `${department} 電子看板遙控器`;
 
   let id = null; // channel id
   let urls = []; // 資源清單陣列
