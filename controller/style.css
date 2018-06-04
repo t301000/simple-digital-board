@@ -57,6 +57,16 @@ body {
   margin-bottom: 20px;
 }
 
+.reload:hover {
+  background-color: rgba(253, 255, 230, 0.9);
+  border-radius: 50%;
+}
+
+.reload:active {
+  background-color: rgba(98, 100, 135, 0.9);
+  border-radius: 50%;
+}
+
 .reload-img {
   width: 100%;
   height: auto;
@@ -91,6 +101,10 @@ body {
 
 .error {
   background-color: rgba(180, 25, 55, .8);
+}
+
+.info {
+  background-color: rgba(62, 120, 220, 0.81);
 }
 
 .resources{

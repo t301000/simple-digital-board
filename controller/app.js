@@ -20,6 +20,8 @@ const db = firebase.firestore();
   let playing = null;
   let defaultResource = null;
 
+  let msgTimer = null;
+
   db.collection('channels').where('name', '==', department).limit(1).get()
     .then(docs => {
       docs.forEach(doc => id = doc.id);
@@ -71,14 +73,21 @@ const db = firebase.firestore();
     msg.innerHTML = '';
     msg.hidden = true;
     msg.className = 'msg';
+
+    // console.log('clear timer ' + msgTimer);
+    msgTimer = null;
   }
 
   // 顯示訊息區塊
   function showMsg(content, msgType='success', showTime=3000) {
+    // 防止一直按
+    if (msgTimer) return false;
+
     msg.hidden = false;
     msg.innerHTML = `<h3>${content}</h3>`;
     msg.classList.add(msgType);
-    setTimeout(resetUI, showTime);
+    msgTimer = setTimeout(resetUI, showTime);
+    // console.log('set timer to ' + msgTimer);
   }
 
   // 取得資源 url 清單
