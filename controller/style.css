@@ -17,9 +17,9 @@ body {
 }
 
 .container {
-  width: 100%;
+  width: 900px;
   position: relative;
-  padding: 50px;
+  margin: 50px auto;
 }
 
 .flex {
@@ -43,18 +43,36 @@ body {
 }
 
 .content {
-  width: 900px;
-  min-width: 900px;
   background-color: rgba(95, 95, 95, .8);
   border-radius: 20px;
   display: flex;
   justify-content: center;
 }
 
+.header-block {
+  justify-content: space-between;
+  margin-bottom: 30px;
+  width: 100%;
+}
+
+.remote-title {
+  align-items: center;
+}
+
+.title-text {
+  color: white;
+}
+
+.remote-img {
+  width: 100px;
+  height: 100px;
+  margin-right: 20px;
+}
+
 .reload {
   width: 100px;
+  height: 100px;
   text-align: center;
-  margin-bottom: 20px;
 }
 
 .reload:hover {
@@ -69,7 +87,7 @@ body {
 
 .reload-img {
   width: 100%;
-  height: auto;
+  height: 100%;
   cursor: pointer;
 }
 

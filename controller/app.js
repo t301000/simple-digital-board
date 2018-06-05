@@ -13,6 +13,7 @@ const db = firebase.firestore();
   
   const pageTitle = document.querySelector('title'); // <title></title> element
   pageTitle.innerText = `${department} 電子看板遙控器`;
+  document.querySelector('.title-text > h1').innerText = department;
 
   let id = null; // channel id
   let urls = []; // 資源清單陣列
@@ -51,7 +52,10 @@ const db = firebase.firestore();
 
   // 更新 firestore document reloadAt 欄位以執行遠端重載
   function reload() {
-    if (!id) return false;
+    if (!id || !playing) return false;
+
+    // 防止一直按
+    if (msgTimer) return false;
 
     const payload = {
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -81,7 +85,7 @@ const db = firebase.firestore();
   // 顯示訊息區塊
   function showMsg(content, msgType='success', showTime=3000) {
     // 防止一直按
-    if (msgTimer) return false;
+    // if (msgTimer) return false;
 
     msg.hidden = false;
     msg.innerHTML = `<h3>${content}</h3>`;
