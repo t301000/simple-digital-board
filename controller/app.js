@@ -11,8 +11,7 @@ const db = firebase.firestore();
   const resources = document.querySelector('.resources');
   resources.addEventListener('click', resourcesClickHandler);
 
-  const pageTitle = document.querySelector('title'); // <title></title> element
-  pageTitle.innerText = `${department} 電子看板遙控器`;
+  document.querySelector('title').innerText = `${department} 電子看板遙控器`;
   document.querySelector('.title-text > h1').innerText = department;
 
   let id = null; // channel id
@@ -26,26 +25,24 @@ const db = firebase.firestore();
   showMsg('資料載入中....', 'info', 0);
 
   db.collection('channels').where('name', '==', department).limit(1).get()
-    .then(docs => {
+    .then(async (docs) => {
       // 取得 channel id
       docs.forEach(doc => id = doc.id);
       // console.log(`${department} ID : ${id}`);
 
-      // 取得並產生 resources array
-      // 監聽變化
-      // 回傳 promise
-      return getUrls();
-    })
-    .then(() => {
-      // 取得、監聽 default and playing
-      // 回傳 promise
-      return Promise.all([listenForSetDefault(), listenForSetPlaying()]);
-    })
-    .then(() => {
-      // console.log('Promise.all ok');
+      try {
+        // console.log(await getUrls());
+        // console.log(await listenForSetDefault());
+        // console.log(await listenForSetPlaying());
+        await getUrls();
+        await listenForSetDefault();
+        await listenForSetPlaying();
+      } catch (err) {
+        console.error(err);
+      }
+
       showMsg('資料載入完成', 'success');
-    })
-    .finally(() => {
+
       // console.log('first mark default and playing');
       // ui 標記
       markDefault();
@@ -106,7 +103,7 @@ const db = firebase.firestore();
   }
 
   // 取得資源 url 清單
-  function getUrls() {
+  async function getUrls() {
     return new Promise(resolve => {
       db.collection(`channels/${id}/resources`)
         .onSnapshot(
@@ -218,8 +215,8 @@ const db = firebase.firestore();
 
   // 監聽 firestore document 變化
   // 由遠端控制設定預設資源
-  function listenForSetDefault() {
-    if (!id) return false;
+  async function listenForSetDefault() {
+    if (!id) return Promise.reject('No Channel ID');
 
     return new Promise(resolve => {
       db.doc(`channels/${id}/actions/setDefault`)
@@ -227,15 +224,15 @@ const db = firebase.firestore();
           defaultResource = urls.find(item => item.id === doc.get('id'));
           console.log('get default');
           markDefault();
-          resolve();
+          resolve('default resolved');
         });
     });
   }
 
   // 監聽 firestore document 變化
   // 由遠端控制設定目前播放資源
-  function listenForSetPlaying() {
-    if (!id) return false;
+  async function listenForSetPlaying() {
+    if (!id) return Promise.reject('No Channel ID');
 
     return new Promise(resolve => {
       db.doc(`channels/${id}/actions/setPlaying`)
@@ -243,7 +240,7 @@ const db = firebase.firestore();
           playing = urls.find(item => item.id === doc.get('id'));
           console.log('get playing');
           markPlaying();
-          resolve();
+          resolve('playing resolved');
         });
     });
   }
