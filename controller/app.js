@@ -10,42 +10,47 @@ const db = firebase.firestore();
   const template = document.querySelector('template');
   const resources = document.querySelector('.resources');
   resources.addEventListener('click', resourcesClickHandler);
-  
+
   const pageTitle = document.querySelector('title'); // <title></title> element
   pageTitle.innerText = `${department} 電子看板遙控器`;
   document.querySelector('.title-text > h1').innerText = department;
 
   let id = null; // channel id
   let urls = []; // 資源清單陣列
-  // let urlsInited = false; //urls 陣列是否初始化完成
+
   let playing = null;
   let defaultResource = null;
 
   let msgTimer = null;
 
+  showMsg('資料載入中....', 'info', 0);
+
   db.collection('channels').where('name', '==', department).limit(1).get()
     .then(docs => {
+      // 取得 channel id
       docs.forEach(doc => id = doc.id);
-      getUrls();
+      // console.log(`${department} ID : ${id}`);
 
-      setTimeout(() => {
-        listenForSetDefault();
-        listenForSetPlaying();
-      }, 1000);
+      // 取得並產生 resources array
+      // 監聽變化
+      // 回傳 promise
+      return getUrls();
+    })
+    .then(() => {
+      // 取得、監聽 default and playing
+      // 回傳 promise
+      return Promise.all([listenForSetDefault(), listenForSetPlaying()]);
+    })
+    .then(() => {
+      // console.log('Promise.all ok');
+      showMsg('資料載入完成', 'success');
+    })
+    .finally(() => {
+      // console.log('first mark default and playing');
+      // ui 標記
+      markDefault();
+      markPlaying();
     });
-
-  // 定時檢查 urls 陣列是否初始化完成
-  // 初始化之後開始監聽 setDefault and setPlaying
-  // let timer = setInterval(() => {
-  //   console.log(urlsInited, urls, defaultResource, playing);
-  //   if (urlsInited && defaultResource && playing) {
-  //     console.log('clear', urlsInited, urls, defaultResource, playing);
-  //     // listenForSetDefault();
-  //     // listenForSetPlaying();
-  //     clearInterval(timer);
-  //   }
-  // },100);
-
 
 
   /********* 函數區 *********/
@@ -72,84 +77,98 @@ const db = firebase.firestore();
       });
   }
 
-  // 重設 UI
-  function resetUI() {
-    msg.innerHTML = '';
-    msg.hidden = true;
-    msg.className = 'msg';
-
-    // console.log('clear timer ' + msgTimer);
-    msgTimer = null;
-  }
-
   // 顯示訊息區塊
+  // showTime 傳入 0 則不設隱藏 timer ，未傳入則預設 3 秒後隱藏
   function showMsg(content, msgType='success', showTime=3000) {
-    // 防止一直按
-    // if (msgTimer) return false;
+    // 先隱藏
+    hideMsg();
 
     msg.hidden = false;
     msg.innerHTML = `<h3>${content}</h3>`;
     msg.classList.add(msgType);
-    msgTimer = setTimeout(resetUI, showTime);
-    // console.log('set timer to ' + msgTimer);
+    if (showTime > 0) {
+      // showTime > 0 則設定 timer 隱藏
+      msgTimer = setTimeout(hideMsg, showTime);
+    }
+  }
+
+  // 隱藏訊息區塊
+  function hideMsg() {
+    // 清除 timer
+    if (msgTimer) {
+      clearTimeout(msgTimer);
+      msgTimer = null;
+    }
+
+    msg.innerHTML = '';
+    msg.hidden = true;
+    msg.className = 'msg';
   }
 
   // 取得資源 url 清單
   function getUrls() {
+    return new Promise(resolve => {
+      db.collection(`channels/${id}/resources`)
+        .onSnapshot(
+          snapshot => {
+            snapshot.docChanges().forEach(generateUrlsArray);
+            // 產生資源項目
+            generateItems();
+            if (defaultResource) {
+              console.log('remark default');
+              markDefault();
+            }
+            if (playing) {
+              console.log('remark playing');
+              markPlaying();
+            }
 
-    db.collection(`channels/${id}/resources`)
-      .onSnapshot(
-        snapshot => {
-          snapshot.docChanges().forEach(generateUrlsArray);
-          // 產生資源項目
-          generateItems();
-          markDefault();
-          markPlaying();
-
-          // urlsInited = true;
-        }
-      );
-
+            // urlsInited = true;
+            console.log(urls);
+            resolve('urls done');
+          }
+        );
+    });
   }
 
   // 產生 urls 陣列
   function generateUrlsArray ({type, doc}) {
-      const obj = {id: doc.id, ...doc.data()};
-      switch (type) {
-        case 'added':
-          urls = [...urls, obj];
-          break;
+    const obj = {id: doc.id, ...doc.data()};
+    switch (type) {
+      case 'added':
+        urls = [...urls, obj];
+        break;
 
-        case 'modified':
-          if (playing && playing.id === doc.id) {
-            // 修改到目前播放資源
-            playing = obj;
-          }
+      case 'modified':
+        if (playing && playing.id === doc.id) {
+          // 修改到目前播放資源
+          playing = obj;
+        }
 
-          // 修改到預設，則更新
-          if (defaultResource && defaultResource.id === doc.id) {
-            defaultResource = obj
-          }
-          const idx = urls.findIndex(item => item.id === doc.id);
-          urls = [...urls.slice(0, idx), obj, ...urls.slice(idx + 1)];
-          break;
+        // 修改到預設，則更新
+        if (defaultResource && defaultResource.id === doc.id) {
+          defaultResource = obj
+        }
+        const idx = urls.findIndex(item => item.id === doc.id);
+        urls = [...urls.slice(0, idx), obj, ...urls.slice(idx + 1)];
+        break;
 
-        case 'removed':
-          urls = urls.filter(item => item.id !== doc.id);
+      case 'removed':
+        urls = urls.filter(item => item.id !== doc.id);
 
-          if (playing && playing.id === doc.id) {
-            // 刪除到目前播放資源
-            playing = null;
-            db.doc(`channels/${id}/actions/setPlaying`).set({id: ''});
-          }
+        if (playing && playing.id === doc.id) {
+          // 刪除到目前播放資源
+          playing = null;
+          db.doc(`channels/${id}/actions/setPlaying`).set({id: ''});
+        }
 
-          // 刪除到預設，則移除
-          if (defaultResource && defaultResource.id === doc.id) {
-            defaultResource = null;
-            db.doc(`channels/${id}/actions/setDefault`).set({id: ''});
-          }
-          break;
-      }
+        // 刪除到預設，則移除
+        if (defaultResource && defaultResource.id === doc.id) {
+          defaultResource = null;
+          db.doc(`channels/${id}/actions/setDefault`).set({id: ''});
+        }
+        break;
+    }
   }
 
   // 產生 / 更新資源選單
@@ -202,12 +221,15 @@ const db = firebase.firestore();
   function listenForSetDefault() {
     if (!id) return false;
 
-    db.doc(`channels/${id}/actions/setDefault`)
-      .onSnapshot(doc => {
-        defaultResource = urls.find(item => item.id === doc.get('id'));
-        console.log('default: ', defaultResource);
-        markDefault();
-      });
+    return new Promise(resolve => {
+      db.doc(`channels/${id}/actions/setDefault`)
+        .onSnapshot(doc => {
+          defaultResource = urls.find(item => item.id === doc.get('id'));
+          console.log('get default');
+          markDefault();
+          resolve();
+        });
+    });
   }
 
   // 監聽 firestore document 變化
@@ -215,12 +237,15 @@ const db = firebase.firestore();
   function listenForSetPlaying() {
     if (!id) return false;
 
-    db.doc(`channels/${id}/actions/setPlaying`)
-      .onSnapshot(doc => {
-        playing = urls.find(item => item.id === doc.get('id'));
-        // console.log('playing: ', playing);
-        markPlaying();
-      });
+    return new Promise(resolve => {
+      db.doc(`channels/${id}/actions/setPlaying`)
+        .onSnapshot(doc => {
+          playing = urls.find(item => item.id === doc.get('id'));
+          console.log('get playing');
+          markPlaying();
+          resolve();
+        });
+    });
   }
 
   // 標記 default
@@ -252,5 +277,5 @@ const db = firebase.firestore();
       wrapper.dataset['id'] === playing.id ? item.classList.add('playing') : item.classList.remove('playing');
     });
   }
-  
+
 })(db);

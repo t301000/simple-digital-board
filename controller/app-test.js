@@ -17,7 +17,7 @@ const db = firebase.firestore();
 
   let id = null; // channel id
   let urls = []; // 資源清單陣列
-  // let urlsInited = false; //urls 陣列是否初始化完成
+
   let playing = null;
   let defaultResource = null;
 
@@ -29,53 +29,28 @@ const db = firebase.firestore();
     .then(docs => {
       // 取得 channel id
       docs.forEach(doc => id = doc.id);
-      console.log(`${department} ID : ${id}`);
+      // console.log(`${department} ID : ${id}`);
 
-      // 回傳所有 resource document 之 querySnapshot
-      // A promise that will be resolved with the results of the query
-      return db.collection(`channels/${id}/resources`).get();
-    })
-    .then(snapshot => {
-      // 由所有 resource document 之 querySnapshot
-      // 產生 resource 物件之陣列
-      urls = snapshot.docs.map(doc => {
-        console.log(doc.id, doc.data());
-        return {id: doc.id, ...doc.data()};
-      });
-
-      // 產生 resource item
-      generateItems();
-
-      return Promise.resolve();
+      // 取得並產生 resources array
+      // 監聽變化
+      // 回傳 promise
+      return getUrls();
     })
     .then(() => {
+      // 取得、監聽 default and playing
+      // 回傳 promise
       return Promise.all([listenForSetDefault(), listenForSetPlaying()]);
     })
-    .then(([defaultItem, playinItem]) => {
-      console.log(defaultItem, playinItem);
-      defaultResource = defaultItem;
-      playing = playinItem;
+    .then(() => {
+      // console.log('Promise.all ok');
+      showMsg('資料載入完成', 'success');
+    })
+    .finally(() => {
+      // console.log('first mark default and playing');
+      // ui 標記
       markDefault();
       markPlaying();
-      showMsg('資料載入完成', 'success');
-
-      // listenForResourcesChanges();
-      // listenForSetDefaultChange();
-      // listenForSetPlayingChange();
     });
-
-  // 定時檢查 urls 陣列是否初始化完成
-  // 初始化之後開始監聽 setDefault and setPlaying
-  // let timer = setInterval(() => {
-  //   console.log(urlsInited, urls, defaultResource, playing);
-  //   if (urlsInited && defaultResource && playing) {
-  //     console.log('clear', urlsInited, urls, defaultResource, playing);
-  //     // listenForSetDefault();
-  //     // listenForSetPlaying();
-  //     clearInterval(timer);
-  //   }
-  // },100);
-
 
 
   /********* 函數區 *********/
@@ -100,16 +75,6 @@ const db = firebase.firestore();
         console.log(err);
         showMsg('發生錯誤，稍後再試', 'error');
       });
-  }
-
-  // 重設 UI
-  function resetUI() {
-    msg.innerHTML = '';
-    msg.hidden = true;
-    msg.className = 'msg';
-
-    // console.log('clear timer ' + msgTimer);
-    msgTimer = null;
   }
 
   // 顯示訊息區塊
@@ -142,29 +107,37 @@ const db = firebase.firestore();
 
   // 取得資源 url 清單
   function getUrls() {
+    return new Promise(resolve => {
+      db.collection(`channels/${id}/resources`)
+        .onSnapshot(
+          snapshot => {
+            snapshot.docChanges().forEach(generateUrlsArray);
+            // 產生資源項目
+            generateItems();
+            if (defaultResource) {
+              console.log('remark default');
+              markDefault();
+            }
+            if (playing) {
+              console.log('remark playing');
+              markPlaying();
+            }
 
-    db.collection(`channels/${id}/resources`)
-      .onSnapshot(
-        snapshot => {
-          snapshot.docChanges().forEach(generateUrlsArray);
-          // 產生資源項目
-          generateItems();
-          markDefault();
-          markPlaying();
-
-          // urlsInited = true;
-        }
-      );
-
+            // urlsInited = true;
+            console.log(urls);
+            resolve('urls done');
+          }
+        );
+    });
   }
 
   // 產生 urls 陣列
   function generateUrlsArray ({type, doc}) {
       const obj = {id: doc.id, ...doc.data()};
       switch (type) {
-        // case 'added':
-        //   urls = [...urls, obj];
-        //   break;
+        case 'added':
+          urls = [...urls, obj];
+          break;
 
         case 'modified':
           if (playing && playing.id === doc.id) {
@@ -248,23 +221,15 @@ const db = firebase.firestore();
   function listenForSetDefault() {
     if (!id) return false;
 
-    const defaultPromise = new Promise(resolve => {
+    return new Promise(resolve => {
         db.doc(`channels/${id}/actions/setDefault`)
             .onSnapshot(doc => {
-                const defaultItem = urls.find(item => item.id === doc.get('id'));
-                defaultResource = defaultItem;
-                resolve(defaultItem);
+              defaultResource = urls.find(item => item.id === doc.get('id'));
+              console.log('get default');
+              markDefault();
+              resolve();
             });
     });
-
-    return defaultPromise;
-
-    // db.doc(`channels/${id}/actions/setDefault`)
-    //   .onSnapshot(doc => {
-    //     defaultResource = urls.find(item => item.id === doc.get('id'));
-    //     console.log('default: ', defaultResource);
-    //     markDefault();
-    //   });
   }
 
   // 監聽 firestore document 變化
@@ -272,21 +237,15 @@ const db = firebase.firestore();
   function listenForSetPlaying() {
     if (!id) return false;
 
-    const playingPromise = new Promise(resolve => {
+    return new Promise(resolve => {
         db.doc(`channels/${id}/actions/setPlaying`)
             .onSnapshot(doc => {
-                const playing = urls.find(item => item.id === doc.get('id'));
-                resolve(playing);
+              playing = urls.find(item => item.id === doc.get('id'));
+              console.log('get playing');
+              markPlaying();
+              resolve();
             });
     });
-
-    return playingPromise;
-    // db.doc(`channels/${id}/actions/setPlaying`)
-    //   .onSnapshot(doc => {
-    //     playing = urls.find(item => item.id === doc.get('id'));
-    //     // console.log('playing: ', playing);
-    //     markPlaying();
-    //   });
   }
 
   // 標記 default
