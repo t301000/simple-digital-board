@@ -82,6 +82,9 @@ const db = firebase.firestore();
 
         // 產生選單
         generateMenu();
+
+        if (defaultResource) updateDefaultMark();
+        if (playing) updatePlayingMark();
       });
   }
 
