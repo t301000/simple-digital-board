@@ -10,8 +10,9 @@ const db = firebase.firestore();
   const template = document.querySelector('template');
   const resources = document.querySelector('.resources');
   resources.addEventListener('click', resourcesClickHandler);
-
-  document.querySelector('title').innerText = `${department} 電子看板遙控器`;
+  
+  const pageTitle = document.querySelector('title'); // <title></title> element
+  pageTitle.innerText = `${department} 電子看板遙控器`;
   document.querySelector('.title-text > h1').innerText = department;
 
   let id = null; // channel id
@@ -25,24 +26,26 @@ const db = firebase.firestore();
   showMsg('資料載入中....', 'info', 0);
 
   db.collection('channels').where('name', '==', department).limit(1).get()
-    .then(async (docs) => {
+    .then(docs => {
       // 取得 channel id
       docs.forEach(doc => id = doc.id);
       // console.log(`${department} ID : ${id}`);
 
-      try {
-        // console.log(await getUrls());
-        // console.log(await listenForSetDefault());
-        // console.log(await listenForSetPlaying());
-        await getUrls();
-        await listenForSetDefault();
-        await listenForSetPlaying();
-      } catch (err) {
-        console.error(err);
-      }
-
+      // 取得並產生 resources array
+      // 監聽變化
+      // 回傳 promise
+      return getUrls();
+    })
+    .then(() => {
+      // 取得、監聽 default and playing
+      // 回傳 promise
+      return Promise.all([listenForSetDefault(), listenForSetPlaying()]);
+    })
+    .then(() => {
+      // console.log('Promise.all ok');
       showMsg('資料載入完成', 'success');
-
+    })
+    .finally(() => {
       // console.log('first mark default and playing');
       // ui 標記
       markDefault();
@@ -91,19 +94,19 @@ const db = firebase.firestore();
 
   // 隱藏訊息區塊
   function hideMsg() {
-    // 清除 timer
-    if (msgTimer) {
-      clearTimeout(msgTimer);
-      msgTimer = null;
-    }
+      // 清除 timer
+      if (msgTimer) {
+        clearTimeout(msgTimer);
+        msgTimer = null;
+      }
 
-    msg.innerHTML = '';
-    msg.hidden = true;
-    msg.className = 'msg';
+      msg.innerHTML = '';
+      msg.hidden = true;
+      msg.className = 'msg';
   }
 
   // 取得資源 url 清單
-  async function getUrls() {
+  function getUrls() {
     return new Promise(resolve => {
       db.collection(`channels/${id}/resources`)
         .onSnapshot(
@@ -130,42 +133,42 @@ const db = firebase.firestore();
 
   // 產生 urls 陣列
   function generateUrlsArray ({type, doc}) {
-    const obj = {id: doc.id, ...doc.data()};
-    switch (type) {
-      case 'added':
-        urls = [...urls, obj];
-        break;
+      const obj = {id: doc.id, ...doc.data()};
+      switch (type) {
+        case 'added':
+          urls = [...urls, obj];
+          break;
 
-      case 'modified':
-        if (playing && playing.id === doc.id) {
-          // 修改到目前播放資源
-          playing = obj;
-        }
+        case 'modified':
+          if (playing && playing.id === doc.id) {
+            // 修改到目前播放資源
+            playing = obj;
+          }
 
-        // 修改到預設，則更新
-        if (defaultResource && defaultResource.id === doc.id) {
-          defaultResource = obj
-        }
-        const idx = urls.findIndex(item => item.id === doc.id);
-        urls = [...urls.slice(0, idx), obj, ...urls.slice(idx + 1)];
-        break;
+          // 修改到預設，則更新
+          if (defaultResource && defaultResource.id === doc.id) {
+            defaultResource = obj
+          }
+          const idx = urls.findIndex(item => item.id === doc.id);
+          urls = [...urls.slice(0, idx), obj, ...urls.slice(idx + 1)];
+          break;
 
-      case 'removed':
-        urls = urls.filter(item => item.id !== doc.id);
+        case 'removed':
+          urls = urls.filter(item => item.id !== doc.id);
 
-        if (playing && playing.id === doc.id) {
-          // 刪除到目前播放資源
-          playing = null;
-          db.doc(`channels/${id}/actions/setPlaying`).set({id: ''});
-        }
+          if (playing && playing.id === doc.id) {
+            // 刪除到目前播放資源
+            playing = null;
+            db.doc(`channels/${id}/actions/setPlaying`).set({id: ''});
+          }
 
-        // 刪除到預設，則移除
-        if (defaultResource && defaultResource.id === doc.id) {
-          defaultResource = null;
-          db.doc(`channels/${id}/actions/setDefault`).set({id: ''});
-        }
-        break;
-    }
+          // 刪除到預設，則移除
+          if (defaultResource && defaultResource.id === doc.id) {
+            defaultResource = null;
+            db.doc(`channels/${id}/actions/setDefault`).set({id: ''});
+          }
+          break;
+      }
   }
 
   // 產生 / 更新資源選單
@@ -215,33 +218,33 @@ const db = firebase.firestore();
 
   // 監聽 firestore document 變化
   // 由遠端控制設定預設資源
-  async function listenForSetDefault() {
-    if (!id) return Promise.reject('No Channel ID');
+  function listenForSetDefault() {
+    if (!id) return false;
 
     return new Promise(resolve => {
-      db.doc(`channels/${id}/actions/setDefault`)
-        .onSnapshot(doc => {
-          defaultResource = urls.find(item => item.id === doc.get('id'));
-          console.log('get default');
-          markDefault();
-          resolve('default resolved');
-        });
+        db.doc(`channels/${id}/actions/setDefault`)
+            .onSnapshot(doc => {
+              defaultResource = urls.find(item => item.id === doc.get('id'));
+              console.log('get default');
+              markDefault();
+              resolve();
+            });
     });
   }
 
   // 監聽 firestore document 變化
   // 由遠端控制設定目前播放資源
-  async function listenForSetPlaying() {
-    if (!id) return Promise.reject('No Channel ID');
+  function listenForSetPlaying() {
+    if (!id) return false;
 
     return new Promise(resolve => {
-      db.doc(`channels/${id}/actions/setPlaying`)
-        .onSnapshot(doc => {
-          playing = urls.find(item => item.id === doc.get('id'));
-          console.log('get playing');
-          markPlaying();
-          resolve('playing resolved');
-        });
+        db.doc(`channels/${id}/actions/setPlaying`)
+            .onSnapshot(doc => {
+              playing = urls.find(item => item.id === doc.get('id'));
+              console.log('get playing');
+              markPlaying();
+              resolve();
+            });
     });
   }
 
@@ -274,5 +277,5 @@ const db = firebase.firestore();
       wrapper.dataset['id'] === playing.id ? item.classList.add('playing') : item.classList.remove('playing');
     });
   }
-
+  
 })(db);

@@ -82,6 +82,9 @@ const db = firebase.firestore();
 
         // 產生選單
         generateMenu();
+
+        if (defaultResource) updateDefaultMark();
+        if (playing) updatePlayingMark();
       });
   }
 
@@ -108,6 +111,7 @@ const db = firebase.firestore();
     if (playing !== null) {
       iframe.setAttribute('src', playing.url);
       updatePlayingMark();
+      updateRemotePlaying();
     } else {
       // 第一次載入時播放預設資源
       if (defaultResource !== null) {
@@ -117,6 +121,24 @@ const db = firebase.firestore();
         iframe.setAttribute('src', '');
       }
     }
+  }
+
+  // 更新 playing 至 firestore
+  function updateRemotePlaying() {
+    db.doc(`channels/${iframe.dataset['id']}/actions/setPlaying`)
+      .set({id: playing.id})
+      .then(() => console.log(`set playing id: ${playing.id} success`))
+      .catch(err => console.log(err));
+  }
+
+  // 更新 default 至 firestore
+  function updateRemoteDefault(id) {
+    if (!id) return false;
+
+    db.doc(`channels/${iframe.dataset['id']}/actions/setDefault`)
+      .set({id: id})
+      .then(() => console.log(`set default id: ${id} success`))
+      .catch(err => console.log(err));
   }
 
   // 選單 click handler
@@ -134,20 +156,12 @@ const db = firebase.firestore();
       // 更新正在播放之資源，並播放
       setPlayingResource(urls[wrapper.dataset['idx']]);
       play();
-      // 更新至 firestore
-      db.doc(`channels/${iframe.dataset['id']}/actions/setPlaying`)
-        .set({id: wrapper.dataset['id']})
-        .then(() => console.log(`set playing id: ${wrapper.dataset['id']} success`))
-        .catch(err => console.log(err));
     }
 
     // 按下 radio，變更預設
     if (srcElm.classList.contains('radio') && !srcElm.classList.contains('default')) {
       // 設為預設值，更新至 firestore
-      db.doc(`channels/${iframe.dataset['id']}/actions/setDefault`)
-        .set({id: wrapper.dataset['id']})
-        .then(() => console.log(`set default id: ${wrapper.dataset['id']} success`))
-        .catch(err => console.log(err));
+      updateRemoteDefault(wrapper.dataset['id']);
     }
   }
 
