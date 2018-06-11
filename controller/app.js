@@ -23,32 +23,28 @@ const db = firebase.firestore();
   let msgTimer = null;
 
   showMsg('資料載入中....', 'info', 0);
+  
+  const snapshot = await db.collection('channels').where('name', '==', department).limit(1).get();
+  id = snapshot.docs[0].id
+  // console.log(id);
+  
+  try {
+    // console.log(await getUrls());
+    // console.log(await listenForSetDefault());
+    // console.log(await listenForSetPlaying());
+    await getUrls();
+    await listenForSetDefault();
+    await listenForSetPlaying();
+  } catch (err) {
+    console.error(err);
+  }
 
-  db.collection('channels').where('name', '==', department).limit(1).get()
-    .then(async (docs) => {
-      // 取得 channel id
-      docs.forEach(doc => id = doc.id);
-      // console.log(`${department} ID : ${id}`);
+  showMsg('資料載入完成', 'success');
 
-      try {
-        // console.log(await getUrls());
-        // console.log(await listenForSetDefault());
-        // console.log(await listenForSetPlaying());
-        await getUrls();
-        await listenForSetDefault();
-        await listenForSetPlaying();
-      } catch (err) {
-        console.error(err);
-      }
-
-      showMsg('資料載入完成', 'success');
-
-      // console.log('first mark default and playing');
-      // ui 標記
-      markDefault();
-      markPlaying();
-    });
-
+  // console.log('first mark default and playing');
+  // ui 標記
+  markDefault();
+  markPlaying();
 
   /********* 函數區 *********/
 
