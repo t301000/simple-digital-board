@@ -1,1 +1,6 @@
+# 每天下午 4:40 關閉 Chromium 且關機
 40 16 * * * /home/pi/kill-chrome.sh
+
+# 每週六日，開機後盡快關機
+* * * * 0,6 /home/pi/kill-chrome.sh
+*/2 * * * 0,6 /sbin/shutdown -h now
