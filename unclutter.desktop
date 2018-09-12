@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=unclutter
+Comment=auto hide mouse pointer
+NoDisplay=true
+Exec=sh /home/pi/unclutter.sh
