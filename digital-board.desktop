@@ -3,4 +3,4 @@ Type=Application
 Name=Digital Board
 Comment=start simple digital board
 NoDisplay=true
-Exec=sh /home/pi/digital-board.sh
+Exec=sh /usr/local/bin/digital-board.sh
