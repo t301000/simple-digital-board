@@ -1,6 +1,11 @@
 firebase.initializeApp(config);
 const db = firebase.firestore();
 
+// Disable deprecated features
+db.settings({
+  timestampsInSnapshots: true
+});
+
 ;(async function (db) {
   const reloadTrigger = document.querySelector('.reload');
   reloadTrigger.addEventListener('click', reload);
